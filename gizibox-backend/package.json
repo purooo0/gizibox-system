@@ -1,0 +1,14 @@
+{
+  "name": "gizibox-backend",
+  "type": "module",
+  "scripts": {
+    "start": "node monitoring/autoAlert.js",
+    "test-connection": "node test/testConnection.js",
+    "login": "node auth/loginUser.js",
+    "register": "node auth/registerUser.js",
+    "clear": "node iot/clearData.js"
+  },
+  "dependencies": {
+    "firebase": "^11.0.0"
+  }
+}
