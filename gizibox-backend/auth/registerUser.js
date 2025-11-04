@@ -18,6 +18,7 @@ async function registerUser(email, password, role = "school") {
     });
 
     console.log(`✅ User registered successfully: ${user.email}`);
+    console.log(`   UID: ${user.uid}`);
     return user;
   } catch (error) {
     console.error("❌ Error registering user:", error.message);
@@ -25,4 +26,4 @@ async function registerUser(email, password, role = "school") {
 }
 
 // TEST FUNCTION
-registerUser("sdn1@sch.id", "123456", "school");
+registerUser("sdn5@sch.id", "123456", "school");
