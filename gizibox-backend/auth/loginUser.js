@@ -15,16 +15,30 @@ export async function loginUser(email, password) {
     const snapshot = await get(userRef);
 
     if (!snapshot.exists()) {
-      console.error("❌ User tidak ditemukan di database!");
-      return;
+      const error = new Error("User tidak ditemukan di database!");
+      error.code = "auth/user-not-found";
+      throw error;
     }
 
     const userData = snapshot.val();
+    
+    if (!userData.role) {
+      const error = new Error("Role user tidak valid");
+      error.code = "auth/invalid-role";
+      throw error;
+    }
 
     console.log(`✅ Login sukses: ${user.email} (Role: ${userData.role})`);
-    return { ...userData, uid: user.uid };
+    return { 
+      uid: user.uid,
+      email: user.email,
+      role: userData.role,
+      // Tambahkan field lain yang diperlukan
+      ...userData
+    };
   } catch (error) {
     console.error("❌ Gagal login:", error.message);
+    throw error; // Re-throw error untuk ditangkap oleh route handler
   }
 }
 
