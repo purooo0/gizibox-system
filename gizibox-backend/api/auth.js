@@ -38,7 +38,8 @@ try {
 if (!admin.apps.length) {
   admin.initializeApp({
     credential: admin.credential.cert(serviceAccount),
-    databaseURL: 'https://gizibox-xxxxx.firebaseio.com' // Ganti dengan URL database Anda
+    // Gunakan env jika ada, fallback ke URL RTDB project Anda
+    databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://gizibox-7bbea-default-rtdb.asia-southeast1.firebasedatabase.app'
   });
 }
 
@@ -122,9 +123,9 @@ router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await admin.auth().getUser(req.user.uid);
     
-    // Ambil data tambahan dari database
-    const userRef = ref(db, `users/${user.uid}`);
-    const snapshot = await get(userRef);
+    // Ambil data tambahan dari database menggunakan Admin SDK (melewati rules client)
+    const adminUserRef = admin.database().ref(`users/${user.uid}`);
+    const snapshot = await adminUserRef.get();
     
     if (!snapshot.exists()) {
       return res.status(404).json({ error: 'Data user tidak ditemukan' });
