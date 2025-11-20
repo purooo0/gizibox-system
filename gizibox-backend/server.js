@@ -2,16 +2,20 @@
 import express from 'express';
 import cors from 'cors';
 import authRoutes from './api/auth.js';
+import machinesRoutes from './api/machines.js';
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middleware
 app.use(cors());
+// Allow text/plain bodies (e.g., Postman 'Text' mode)
+app.use(express.text({ type: 'text/*' }));
 app.use(express.json());
 
 // Routes
 app.use('/api/auth', authRoutes);
+app.use('/api/machines', machinesRoutes);
 
 // Test route
 app.get('/', (req, res) => {
@@ -32,6 +36,10 @@ app.listen(PORT, () => {
   console.log(`- POST   /api/auth/login`);
   console.log(`- POST   /api/auth/logout`);
   console.log(`- GET    /api/auth/me`);
+  console.log(`- POST   /api/machines/assign`);
+  console.log(`- POST   /api/machines/unassign`);
+  console.log(`- GET    /api/machines/mine`);
+  console.log(`- GET    /api/machines/by-owner/:uid`);
 });
 
 export default app;
