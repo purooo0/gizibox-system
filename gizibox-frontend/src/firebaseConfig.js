@@ -13,7 +13,12 @@ const firebaseConfig = {
   measurementId: "G-X9H911E616"
 };
 
+// Initialize app
 const app = initializeApp(firebaseConfig);
 
+// Export firebase instances
 export const db = getDatabase(app);
 export const auth = getAuth(app);
+
+// ⬅ WAJIB, supaya SchoolDashboard bisa import { app }
+export { app };

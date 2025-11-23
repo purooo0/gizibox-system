@@ -4,14 +4,12 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import { auth } from "../firebaseConfig";
 import { getDatabase, ref, set } from "firebase/database";
 
-
-
 export default function Register() {
   const navigate = useNavigate();
 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("school");
+  const [schoolName, setSchoolName] = useState(""); // ➜ input baru
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
@@ -19,6 +17,12 @@ export default function Register() {
     e.preventDefault();
     setLoading(true);
     setErrorMsg("");
+
+    if (!schoolName.trim()) {
+      setErrorMsg("Nama sekolah wajib diisi.");
+      setLoading(false);
+      return;
+    }
 
     try {
       const userCredential = await createUserWithEmailAndPassword(
@@ -28,13 +32,16 @@ export default function Register() {
       );
 
       const db = getDatabase();
+
       await set(ref(db, "users/" + userCredential.user.uid), {
         email,
-        role,
+        role: "school",         // FIXED: selalu school
+        school_name: schoolName,
+        machineIds: {},         // optional: kosong di awal
         createdAt: new Date().toISOString(),
       });
 
-      alert("Akun berhasil dibuat!");
+      alert("Akun sekolah berhasil dibuat!");
       navigate("/");
     } catch (err) {
       console.log("REGISTER ERROR:", err);
@@ -47,17 +54,29 @@ export default function Register() {
   return (
     <div style={styles.container}>
       <div style={styles.card}>
-        <h1 style={styles.title}>Daftar Akun GiziBox</h1>
+        <h1 style={styles.title}>Daftar Akun Sekolah</h1>
 
         {errorMsg && <div style={styles.error}>{errorMsg}</div>}
 
         <form onSubmit={handleRegister} style={styles.form}>
+          
+          {/* NAMA SEKOLAH */}
+          <label style={styles.label}>Nama Sekolah</label>
+          <input
+            type="text"
+            style={styles.input}
+            placeholder="contoh: SDN 01 Jakarta"
+            value={schoolName}
+            onChange={(e) => setSchoolName(e.target.value)}
+            required
+          />
+
           {/* EMAIL */}
           <label style={styles.label}>Email</label>
           <input
             type="email"
             style={styles.input}
-            placeholder="contoh: sekolah@gizibox.com"
+            placeholder="sekolah@gizibox.com"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
@@ -73,17 +92,6 @@ export default function Register() {
             onChange={(e) => setPassword(e.target.value)}
             required
           />
-
-          {/* ROLE */}
-          <label style={styles.label}>Role</label>
-          <select
-            style={styles.input}
-            value={role}
-            onChange={(e) => setRole(e.target.value)}
-          >
-            <option value="school">School</option>
-            <option value="admin">Admin</option>
-          </select>
 
           {/* BUTTON */}
           <button
@@ -109,7 +117,6 @@ export default function Register() {
   );
 }
 
-
 const styles = {
   container: {
     display: "flex",
@@ -125,7 +132,7 @@ const styles = {
     borderRadius: "14px",
     boxShadow: "0 12px 25px rgba(0, 0, 0, 0.08)",
     width: "100%",
-    maxWidth: "400px",
+    maxWidth: "420px",
   },
   title: {
     textAlign: "center",
