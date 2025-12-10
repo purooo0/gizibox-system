@@ -12,7 +12,7 @@ export default function AdminDashboard() {
     window.location.href = "/";
   };
 
-  // === Format tanggal & jam lengkap ===
+  // === Format tanggal lengkap ===
   function formatDateTimeFull(iso) {
     if (!iso) return "-";
     const d = new Date(iso);
@@ -49,10 +49,12 @@ export default function AdminDashboard() {
     };
   }, []);
 
+  // Filter hanya role school
   const schoolUsers = Object.entries(users).filter(
     ([, u]) => u?.role === "school"
   );
 
+  // Mesin milik sekolah tertentu
   const schoolMachines =
     selectedSchool == null
       ? []
@@ -77,7 +79,9 @@ export default function AdminDashboard() {
               return (
                 <div
                   key={uid}
-                  className={`school-item ${selectedSchool === uid ? "active" : ""}`}
+                  className={`school-item ${
+                    selectedSchool === uid ? "active" : ""
+                  }`}
                   onClick={() => setSelectedSchool(uid)}
                 >
                   <div className="school-name">{displayedName}</div>
@@ -132,31 +136,35 @@ export default function AdminDashboard() {
               <div className="muted">Sekolah ini belum memiliki mesin.</div>
             ) : (
               <div className="machine-grid">
-                {schoolMachines.map((m) => (
-                  <div className="machine-card" key={m.mid}>
-                    <h3 className="machine-title">
-                      {m.meta?.name || m.school_info?.school_name || m.mid}
-                    </h3>
+                {schoolMachines.map((m) => {
+                  const current = m?.status?.current_stock ?? "-";
+                  const required = m?.status?.stock ?? "-";
 
-                    <div className="machine-info">
-                      <p><b>Machine ID:</b> {m.mid}</p>
+                  return (
+                    <div className="machine-card" key={m.mid}>
+                      <h3 className="machine-title">
+                        {m.meta?.name || m.school_info?.school_name || m.mid}
+                      </h3>
 
-                      <p>
-                        <b>Stok:</b> {m?.stock_info?.current_stock ?? "-"} /{" "}
-                        {m?.stock_info?.initial_stock ?? "-"}
-                      </p>
+                      <div className="machine-info">
+                        <p><b>Machine ID:</b> {m.mid}</p>
 
-                      <p><b>Suhu:</b> {m?.status?.temperature ?? "-"} °C</p>
+                        <p>
+                          <b>Stok:</b> {current} / {required}
+                        </p>
 
-                      <p><b>Kelembapan:</b> {m?.status?.humidity ?? "-"} %</p>
+                        <p><b>Suhu:</b> {m?.status?.temperature ?? "-"} °C</p>
 
-                      <p>
-                        <b>Last Update:</b>{" "}
-                        {formatDateTimeFull(m?.status?.last_update)}
-                      </p>
+                        <p><b>Kelembapan:</b> {m?.status?.humidity ?? "-"} %</p>
+
+                        <p>
+                          <b>Last Update:</b>{" "}
+                          {formatDateTimeFull(m?.status?.last_update)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>
