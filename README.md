@@ -117,16 +117,3 @@ npm run preview  # Preview hasil build
 
 - [Backend README](./gizibox-backend/README.md)
 - [Frontend README](./gizibox-frontend/README.md)
-- [Stock Management](./gizibox-backend/STOCK_MANAGEMENT.md)
-- [User Flow](./gizibox-backend/USER_FLOW.md)
-- [Dokumentasi Backend](./gizibox-backend/dokumentasi.md)
-
-## Security Notes
-
-Repository ini sudah disiapkan agar aman untuk publik:
-
-- Firebase config dibaca dari environment variables.
-- `serviceAccountKey.json`, `.env`, `dist/`, `node_modules/`, dan file OS seperti `.DS_Store` masuk `.gitignore`.
-- Jangan commit private key, token, credential Firebase Admin, atau build output lokal.
-
-Jika credential pernah terlanjur masuk git history, revoke key tersebut dari Firebase Console dan buat key baru sebelum repository dipublikasikan.
