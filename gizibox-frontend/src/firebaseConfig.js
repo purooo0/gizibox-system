@@ -3,22 +3,34 @@ import { getDatabase } from "firebase/database";
 import { getAuth } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAHKjk7hi3czZs2odclSdctTLI-MnabANA",
-  authDomain: "gizibox-7bbea.firebaseapp.com",
-  databaseURL: "https://gizibox-7bbea-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "gizibox-7bbea",
-  storageBucket: "gizibox-7bbea.appspot.com",
-  messagingSenderId: "560037425199",
-  appId: "1:560037425199:web:be7f47362482d74e2b56da",
-  measurementId: "G-X9H911E616"
+  apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
+  authDomain: import.meta.env.VITE_FIREBASE_AUTH_DOMAIN,
+  databaseURL: import.meta.env.VITE_FIREBASE_DATABASE_URL,
+  projectId: import.meta.env.VITE_FIREBASE_PROJECT_ID,
+  storageBucket: import.meta.env.VITE_FIREBASE_STORAGE_BUCKET,
+  messagingSenderId: import.meta.env.VITE_FIREBASE_MESSAGING_SENDER_ID,
+  appId: import.meta.env.VITE_FIREBASE_APP_ID,
+  measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 };
 
-// Initialize app
+const requiredEnv = [
+  "VITE_FIREBASE_API_KEY",
+  "VITE_FIREBASE_AUTH_DOMAIN",
+  "VITE_FIREBASE_DATABASE_URL",
+  "VITE_FIREBASE_PROJECT_ID",
+  "VITE_FIREBASE_STORAGE_BUCKET",
+  "VITE_FIREBASE_MESSAGING_SENDER_ID",
+  "VITE_FIREBASE_APP_ID",
+];
+
+const missingEnv = requiredEnv.filter((key) => !import.meta.env[key]);
+
+if (missingEnv.length > 0) {
+  throw new Error(`Missing Firebase environment variables: ${missingEnv.join(", ")}`);
+}
+
 const app = initializeApp(firebaseConfig);
 
-// Export firebase instances
 export const db = getDatabase(app);
 export const auth = getAuth(app);
-
-// ⬅ WAJIB, supaya SchoolDashboard bisa import { app }
 export { app };

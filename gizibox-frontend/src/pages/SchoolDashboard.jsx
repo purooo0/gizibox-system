@@ -16,10 +16,17 @@ import { app } from "../firebaseConfig";
 
 const db = getDatabase(app);
 
+function getStoredGiziboxUser() {
+  const stored = localStorage.getItem("gizibox_user");
+  return stored ? JSON.parse(stored) : null;
+}
+
 export default function SchoolDashboard() {
+  const initialUser = getStoredGiziboxUser();
+
   // user
-  const [user, setUser] = useState(null);
-  const [selectedMachineId, setSelectedMachineId] = useState(null);
+  const [user] = useState(initialUser);
+  const [selectedMachineId, setSelectedMachineId] = useState(initialUser?.machineId || null);
 
   // lists & data
   const [machinesList, setMachinesList] = useState([]);
@@ -62,15 +69,18 @@ export default function SchoolDashboard() {
     return `${hari}, ${tanggal}, ${waktu}`;
   }
 
-  // load user from localStorage
-  useEffect(() => {
-    const stored = localStorage.getItem("gizibox_user");
-    if (stored) {
-      const u = JSON.parse(stored);
-      setUser(u);
-      if (u.machineId) setSelectedMachineId(u.machineId);
+  async function queryMachinesByOwner(uid) {
+    try {
+      const q = query(ref(db, "machines"), orderByChild("owner_uid"), equalTo(uid));
+      const snap = await get(q);
+      if (!snap.exists()) return [];
+      const val = snap.val();
+      return Object.entries(val).map(([id, data]) => ({ machineId: id, ...data }));
+    } catch (err) {
+      console.error("Query machines by owner failed:", err);
+      return [];
     }
-  }, []);
+  }
 
   // load machine list (either from users/{uid}/machineIds or query machines by owner)
   useEffect(() => {
@@ -94,28 +104,14 @@ export default function SchoolDashboard() {
       })
       .then((list) => {
         setMachinesList(list || []);
-        if (!selectedMachineId && list.length > 0) {
-          setSelectedMachineId(list[0].machineId);
-        } else if (selectedMachineId) {
-          const found = list.find((m) => m.machineId === selectedMachineId);
-          if (!found && list.length > 0) setSelectedMachineId(list[0].machineId);
-        }
+        setSelectedMachineId((currentMachineId) => {
+          if (!list.length) return currentMachineId;
+          const currentStillExists = list.some((machine) => machine.machineId === currentMachineId);
+          return currentStillExists ? currentMachineId : list[0].machineId;
+        });
       })
       .catch((err) => console.error("Failed load machines:", err));
-  }, [user]); // intentionally only depends on user
-
-  async function queryMachinesByOwner(uid) {
-    try {
-      const q = query(ref(db, "machines"), orderByChild("owner_uid"), equalTo(uid));
-      const snap = await get(q);
-      if (!snap.exists()) return [];
-      const val = snap.val();
-      return Object.entries(val).map(([id, data]) => ({ machineId: id, ...data }));
-    } catch (err) {
-      console.error("Query machines by owner failed:", err);
-      return [];
-    }
-  }
+  }, [user]);
 
   /**
    * evaluateAlerts
@@ -258,7 +254,7 @@ export default function SchoolDashboard() {
       }
       const all = snap.val();
       const arr = Object.entries(all)
-        .filter(([_, a]) => a.machineId === selectedMachineId)
+        .filter(([, a]) => a.machineId === selectedMachineId)
         .map(([id, a]) => ({ id, ...a }))
         .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
       setAlerts(arr);
@@ -266,15 +262,9 @@ export default function SchoolDashboard() {
 
     // cleanup
     return () => {
-      try {
-        unsubStatus && unsubStatus();
-      } catch (e) {}
-      try {
-        unsubHistory && unsubHistory();
-      } catch (e) {}
-      try {
-        unsubAlerts && unsubAlerts();
-      } catch (e) {}
+      unsubStatus();
+      unsubHistory();
+      unsubAlerts();
     };
   }, [selectedMachineId]);
 

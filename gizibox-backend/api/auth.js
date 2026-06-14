@@ -2,44 +2,38 @@
 import express from 'express';
 import { loginUser } from '../auth/loginUser.js';
 import { registerUser } from '../auth/registerUser.js';
-import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig.js';
-import { ref, get } from 'firebase/database';
+import { signOut } from 'firebase/auth';
+import { auth } from '../firebaseConfig.js';
 import admin from 'firebase-admin';
 import { readFileSync, existsSync } from 'fs';
 import { fileURLToPath } from 'url';
-import { dirname, join } from 'path';
+import { dirname, join, resolve } from 'path';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
-const serviceAccountPath = join(__dirname, '../serviceAccountKey.json');
 
-if (!existsSync(serviceAccountPath)) {
-  console.error('❌ ERROR: serviceAccountKey.json not found!');
-  console.log('\n🔧 Cara membuat service account key:');
-  console.log('1. Buka Firebase Console: https://console.firebase.google.com/');
-  console.log('2. Pilih project Anda');
-  console.log('3. Klik ikon ⚙️ > Project settings');
-  console.log('4. Pilih tab "Service accounts"');
-  console.log('5. Klik "Generate new private key"');
-  console.log('6. Simpan file JSON yang didownload sebagai "serviceAccountKey.json" di folder project\n');
-  process.exit(1);
+function loadServiceAccount() {
+  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+    return JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+  }
+
+  const serviceAccountPath = process.env.FIREBASE_SERVICE_ACCOUNT_PATH
+    ? resolve(process.cwd(), process.env.FIREBASE_SERVICE_ACCOUNT_PATH)
+    : join(__dirname, '../serviceAccountKey.json');
+
+  if (!existsSync(serviceAccountPath)) {
+    throw new Error(
+      'Firebase service account not found. Set FIREBASE_SERVICE_ACCOUNT_PATH or FIREBASE_SERVICE_ACCOUNT in gizibox-backend/.env.'
+    );
+  }
+
+  return JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
 }
 
-let serviceAccount;
-try {
-  serviceAccount = JSON.parse(readFileSync(serviceAccountPath, 'utf8'));
-} catch (error) {
-  console.error('❌ Error reading service account:', error.message);
-  process.exit(1);
-}
-
-// Inisialisasi Admin SDK jika belum ada
 if (!admin.apps.length) {
   admin.initializeApp({
-    credential: admin.credential.cert(serviceAccount),
-    // Gunakan env jika ada, fallback ke URL RTDB project Anda
-    databaseURL: process.env.FIREBASE_DATABASE_URL || 'https://gizibox-7bbea-default-rtdb.asia-southeast1.firebasedatabase.app'
+    credential: admin.credential.cert(loadServiceAccount()),
+    databaseURL: process.env.FIREBASE_DATABASE_URL
   });
 }
 

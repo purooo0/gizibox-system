@@ -60,7 +60,7 @@ export default function Login() {
       } else {
         navigate("/school/dashboard");
       }
-    } catch (err) {
+    } catch {
       setError("Email atau password salah!");
     }
 
